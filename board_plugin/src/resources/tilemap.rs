@@ -1,10 +1,11 @@
 use crate::{resources::tile::Tile, components::Coordinates};
 use std::ops::{Deref, DerefMut};
+use bevy::prelude::Resource;
 use rand::{thread_rng, Rng};
 
 
 /// Base tile map
-#[derive(Debug, Clone)]
+#[derive(Resource, Debug, Clone)]
 pub struct TileMap {
     bomb_count: u16,
     height: u16,
