@@ -61,7 +61,7 @@ impl TileMap {
     }
 
     fn is_bomb_at(&self, coords: Coordinates) -> bool {
-        if (coords.x >= self.width || coords.y >= self.height) {
+        if coords.x >= self.width || coords.y >= self.height {
             return false;
         }
         self.map[coords.y as usize][coords.x as usize].is_bomb()
@@ -102,10 +102,10 @@ impl TileMap {
         self.height
     }
 
-    // Getter for `bomb_count`
-    pub fn bomb_count(&self) -> u16 {
-        self.bomb_count
-    }
+    // // Getter for `bomb_count`
+    // pub fn bomb_count(&self) -> u16 {
+    //     self.bomb_count
+    // }
 }
 
 impl Deref for TileMap {
