@@ -1,19 +1,24 @@
 use bevy::prelude::*;
 use bevy::log;
+use bevy::math::Vec3Swizzles;
 use bevy::window::PrimaryWindow;
 use resources::BoardOptions;
 use resources::tile::Tile;
 
+use crate::bounds::Bounds2;
 use crate::components::Bomb;
 use crate::components::BombNeighbor;
 use crate::components::Coordinates;
 use crate::components::Uncover;
+use crate::resources::Board;
 use crate::resources::BoardPosition;
 use crate::resources::TileSize;
 use crate::resources::tilemap::TileMap;
 
+mod bounds;
 mod components;
 pub mod resources;
+mod systems;
 
 pub struct BoardPlugin;
 
@@ -25,6 +30,8 @@ impl Plugin for BoardPlugin {
         app.register_type::<Uncover>();
 
         app.add_startup_system(Self::sys_create_board);
+        app.add_system(systems::input::input_handling);
+
         log::info!("Loaded Board Plugin");
     }
 }
@@ -95,7 +102,15 @@ impl BoardPlugin {
                     font,
                 );
             });
-
+        
+        cmd.insert_resource(Board {
+            tile_map,
+            bounds: Bounds2 {
+                position: board_position.xy(),
+                size: board_size,
+            },
+            tile_size,
+        });
     }
 
 }
