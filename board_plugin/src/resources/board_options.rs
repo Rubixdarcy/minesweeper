@@ -1,8 +1,8 @@
-use bevy::prelude::{Vec3,Resource};
+use bevy::{prelude::{Vec3,Resource}, reflect::Reflect};
 use serde::{Deserialize, Serialize};
 
 /// Tile size options
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, Reflect)]
 pub enum TileSize {
     /// Fixed tile size
     Fixed(f32),
@@ -17,7 +17,7 @@ impl Default for TileSize {
 }
 
 /// Board position customization options
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, Reflect)]
 pub enum BoardPosition {
     /// Centered board
     Centered { offset: Vec3 },
@@ -33,7 +33,7 @@ impl Default for BoardPosition {
 
 /// Board generation options. Must be used as a resource
 // We use serde to allow saving option presets and loading them at runtime
-#[derive(Resource, Debug, Clone, Serialize, Deserialize)]
+#[derive(Resource, Debug, Clone, Serialize, Deserialize, Reflect)]
 pub struct BoardOptions {
     /// Tile map size
     pub map_size: (u16, u16),

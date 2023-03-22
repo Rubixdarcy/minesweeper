@@ -1,6 +1,6 @@
-use bevy::prelude::Vec2;
+use bevy::{prelude::*};
 
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Copy, Clone, Reflect)]
 pub struct Bounds2 {
     pub position: Vec2,
     pub size: Vec2,

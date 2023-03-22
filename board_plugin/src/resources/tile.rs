@@ -1,8 +1,9 @@
+use bevy::reflect::{Reflect, FromReflect};
 #[cfg(feature = "debug")]
 use colored::Colorize;
 
 /// Enum describing a Minesweeper tile
-#[derive(Debug, Copy, Clone, Eq, PartialEq)]
+#[derive(Debug, Copy, Clone, Eq, PartialEq, Reflect, FromReflect)]
 pub enum Tile {
     /// Is a bomb
     Bomb,
