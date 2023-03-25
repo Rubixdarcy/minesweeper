@@ -13,6 +13,7 @@ fn main() {
         .insert_resource(BoardOptions {
             map_size: (20, 20),
             bomb_count: 40,
+            safe_start: true,
             tile_padding: 2.,
             ..default()
         })

@@ -1,6 +1,6 @@
 use bevy::{prelude::*, window::PrimaryWindow, log, utils::HashMap, math::Vec3Swizzles};
 
-use crate::{resources::{BoardOptions, tilemap::TileMap, TileSize, BoardPosition, tile::Tile, Board}, bounds::Bounds2, components::{Coordinates, BombNeighbor, Bomb}};
+use crate::{resources::{BoardOptions, tilemap::TileMap, TileSize, BoardPosition, tile::Tile, Board}, bounds::Bounds2, components::{Coordinates, BombNeighbor, Bomb, Uncover}};
 
 pub fn create_board(
     mut cmd: Commands,
@@ -39,6 +39,7 @@ pub fn create_board(
     };
 
     let mut covered_tiles = HashMap::with_capacity((tile_map.width() * tile_map.height()).into());
+    let mut safe_start = None;
 
     cmd.spawn(Name::new("Board"))
         .insert(SpatialBundle {
@@ -69,8 +70,15 @@ pub fn create_board(
                 font,
                 Color::DARK_GRAY,
                 &mut covered_tiles,
+                &mut safe_start,
             );
         });
+    
+    if options.safe_start {
+        if let Some(e) = safe_start {
+            cmd.entity(e).insert(Uncover);
+        }
+    }
     
     cmd.insert_resource(Board {
         tile_map,
@@ -93,6 +101,7 @@ fn spawn_tiles(
     font: Handle<Font>,
     covered_tile_color: Color,
     covered_tiles: &mut HashMap<Coordinates, Entity>,
+    safe_start_entity: &mut Option<Entity>,
 ) {
     for (y, line) in tile_map.iter().enumerate() {
         for (x, tile) in line.iter().enumerate() {
@@ -114,8 +123,8 @@ fn spawn_tiles(
                 })
                 .insert(Name::new(format!("Tile ({}, {})", x, y)))
                 .insert(coords)
-                .with_children(|tile| {
-                    let entity = tile.spawn(Name::new("Tile Cover"))
+                .with_children(|tile_entity| {
+                    let entity = tile_entity.spawn(Name::new("Tile Cover"))
                         .insert(SpriteBundle {
                             sprite: Sprite {
                                 custom_size: Some(Vec2::splat(size - padding)),
@@ -127,6 +136,9 @@ fn spawn_tiles(
                         })
                         .id();
                     covered_tiles.insert(coords, entity);
+                    if safe_start_entity.is_none() && *tile == Tile::Empty {
+                        *safe_start_entity = Some(entity);
+                    }
                 });
 
             match tile {
