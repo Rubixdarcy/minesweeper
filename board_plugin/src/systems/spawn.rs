@@ -41,7 +41,7 @@ pub fn create_board(
     let mut covered_tiles = HashMap::with_capacity((tile_map.width() * tile_map.height()).into());
     let mut safe_start = None;
 
-    cmd.spawn(Name::new("Board"))
+    let board_entity = cmd.spawn(Name::new("Board"))
         .insert(SpatialBundle {
             transform: Transform::from_translation(board_position),
             visibility: Visibility::Visible,
@@ -72,7 +72,8 @@ pub fn create_board(
                 &mut covered_tiles,
                 &mut safe_start,
             );
-        });
+        })
+        .id();
     
     if options.safe_start {
         if let Some(e) = safe_start {
@@ -87,6 +88,7 @@ pub fn create_board(
             size: board_size,
         },
         tile_size,
+        entity: board_entity,
         covered_tiles,
     });
 }
@@ -166,6 +168,11 @@ fn spawn_tiles(
             }
         }
     }
+}
+
+pub fn despawn_board(mut cmd: Commands, board: Res<Board>) {
+    cmd.entity(board.entity).despawn_recursive();
+    cmd.remove_resource::<Board>();
 }
 
 fn adaptative_tile_size(
