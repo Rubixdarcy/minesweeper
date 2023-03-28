@@ -171,6 +171,7 @@ fn spawn_tiles(
 }
 
 pub fn despawn_board(mut cmd: Commands, board: Res<Board>) {
+    log::info!("despawning board");
     cmd.entity(board.entity).despawn_recursive();
     cmd.remove_resource::<Board>();
 }
