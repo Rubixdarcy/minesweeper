@@ -1,17 +1,13 @@
 use bevy::{prelude::*, window::PrimaryWindow, log, utils::HashMap, math::Vec3Swizzles};
 
-use crate::{resources::{BoardOptions, tilemap::TileMap, TileSize, BoardPosition, tile::Tile, Board}, bounds::Bounds2, components::{Coordinates, BombNeighbor, Bomb, Uncover}};
+use crate::{resources::{BoardOptions, tilemap::TileMap, TileSize, BoardPosition, tile::Tile, Board, BoardAssets}, bounds::Bounds2, components::{Coordinates, BombNeighbor, Bomb, Uncover}};
 
 pub fn create_board(
     mut cmd: Commands,
     board_options: Option<Res<BoardOptions>>,
+    board_assets: Res<BoardAssets>,
     windows: Query<&Window, With<PrimaryWindow>>,
-    asset_server: Res<AssetServer>,
 ) {
-
-    let font: Handle<Font> = asset_server.load("fonts/pixeled.ttf");
-    let bomb_image: Handle<Image> = asset_server.load("sprites/bomb.png");
-
     let window = windows.single();
     let options = board_options.map(|o| o.to_owned()).unwrap_or_default();
 
@@ -52,10 +48,11 @@ pub fn create_board(
                 .spawn(Name::new("Background"))
                 .insert(SpriteBundle {
                     sprite: Sprite {
-                        color: Color::WHITE,
+                        color: board_assets.board_material.color,
                         custom_size: Some(board_size),
                         ..default()
                     },
+                    texture: board_assets.board_material.texture.clone(),
                     transform: Transform::from_xyz(board_size.x / 2., board_size.y / 2., 0.),
                     ..default()
                 });
@@ -65,10 +62,7 @@ pub fn create_board(
                 &tile_map,
                 tile_size,
                 options.tile_padding,
-                Color::GRAY,
-                bomb_image,
-                font,
-                Color::DARK_GRAY,
+                &board_assets,
                 &mut covered_tiles,
                 &mut safe_start,
             );
@@ -98,10 +92,7 @@ fn spawn_tiles(
     tile_map: &TileMap,
     size: f32,
     padding: f32,
-    color: Color,
-    bomb_image: Handle<Image>,
-    font: Handle<Font>,
-    covered_tile_color: Color,
+    board_assets: &BoardAssets,
     covered_tiles: &mut HashMap<Coordinates, Entity>,
     safe_start_entity: &mut Option<Entity>,
 ) {
@@ -112,10 +103,11 @@ fn spawn_tiles(
             cmd
                 .insert(SpriteBundle {
                     sprite: Sprite {
-                        color,
+                        color: board_assets.tile_material.color,
                         custom_size: Some(Vec2::splat(size - padding)),
                         ..default()
                     },
+                    texture: board_assets.tile_material.texture.clone(),
                     transform: Transform::from_xyz(
                         (x as f32 * size) + (size / 2.),
                         (y as f32 * size) + (size / 2.),
@@ -130,9 +122,10 @@ fn spawn_tiles(
                         .insert(SpriteBundle {
                             sprite: Sprite {
                                 custom_size: Some(Vec2::splat(size - padding)),
-                                color: covered_tile_color,
+                                color: board_assets.covered_tile_material.color,
                                 ..default()
                             },
+                            texture: board_assets.covered_tile_material.texture.clone(),
                             transform: Transform::from_xyz(0., 0., 2.),
                             ..default()
                         })
@@ -150,10 +143,11 @@ fn spawn_tiles(
                             p.spawn(SpriteBundle {
                                 sprite: Sprite {
                                     custom_size: Some(Vec2::splat(size - padding)),
+                                    color: board_assets.bomb_material.color,
                                     ..default()
                                 },
                                 transform: Transform::from_xyz(0., 0., 1.),
-                                texture: bomb_image.clone(),
+                                texture: board_assets.bomb_material.texture.clone(),
                                 ..default()
                             });
                         });
@@ -161,7 +155,7 @@ fn spawn_tiles(
                 Tile::BombNeighbor(n) => {
                     cmd.insert(BombNeighbor { count: *n })
                         .with_children(|p| {
-                            p.spawn(bomb_count_text_bundle(*n, font.clone(), size - padding));
+                            p.spawn(bomb_count_text_bundle(*n, board_assets, size - padding));
                         });
                 }
                 Tile::Empty => (),
@@ -186,16 +180,10 @@ fn adaptative_tile_size(
     max_width.min(max_heigth).clamp(min, max)
 }
 
-fn bomb_count_text_bundle(count: u8, font: Handle<Font>, size: f32) -> Text2dBundle {
+fn bomb_count_text_bundle(count: u8, board_assets: &BoardAssets, size: f32) -> Text2dBundle {
     let text = count.to_string();
-    let color = match count {
-        1 => Color::WHITE,
-        2 => Color::GREEN,
-        3 => Color::YELLOW,
-        4 => Color::ORANGE,
-        _ => Color::PURPLE,
-    };
-    let style = TextStyle { font, font_size: size, color };
+    let color = board_assets.bomb_counter_color(count);
+    let style = TextStyle { font: board_assets.bomb_counter_font.clone(), font_size: size, color };
     let alignment = TextAlignment::Center;
 
     Text2dBundle {

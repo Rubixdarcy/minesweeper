@@ -1,9 +1,8 @@
 use bevy::{prelude::*, log};
-use bevy_inspector_egui::quick::StateInspectorPlugin;
 #[cfg(feature = "debug")]
-use bevy_inspector_egui::quick::WorldInspectorPlugin;
+use bevy_inspector_egui::quick::{StateInspectorPlugin,WorldInspectorPlugin};
 use board_plugin::{BoardPlugin, BoardState};
-use board_plugin::resources::BoardOptions;
+use board_plugin::resources::{BoardOptions, BoardAssets, SpriteMaterial};
 
 #[derive(Default, Debug, PartialEq, Eq, Hash, Copy, Clone, States, Reflect)]
 pub enum AppState {
@@ -19,18 +18,11 @@ fn main() {
         .add_plugins(DefaultPlugins)
         .add_state::<AppState>()
         .add_plugin(BoardPlugin)
-        .insert_resource(BoardOptions {
-            map_size: (20, 20),
-            bomb_count: 40,
-            safe_start: true,
-            tile_padding: 2.,
-            ..default()
-        })
         .add_system(state_handler)
-        .add_startup_system(sys_camera_setup)
+        .add_startup_system(board_setup)
+        .add_startup_system(camera_setup)
         .configure_set(OnUpdate(BoardState::Active)
             .run_if(in_state(AppState::InGame)))
-
         .register_type::<AppState>()
     ;
 
@@ -43,6 +35,44 @@ fn main() {
 
     app.run();
 
+}
+
+fn board_setup(
+    mut cmd: Commands,
+    asset_server: Res<AssetServer>,
+) {
+    cmd.insert_resource(BoardOptions {
+        map_size: (20, 20),
+        bomb_count: 40,
+        safe_start: true,
+        tile_padding: 2.,
+        ..default()
+    });
+    cmd.insert_resource(BoardAssets {
+        label: "Default".to_owned(),
+        board_material: SpriteMaterial {
+            color: Color::WHITE,
+            ..Default::default()
+        },
+        tile_material: SpriteMaterial {
+            color: Color::DARK_GRAY,
+            ..Default::default()
+        },
+        covered_tile_material: SpriteMaterial {
+            color: Color::GRAY,
+            ..Default::default()
+        },
+        bomb_counter_font: asset_server.load("fonts/pixeled.ttf"),
+        bomb_counter_colors: BoardAssets::default_colors(),
+        flag_material: SpriteMaterial {
+            texture: asset_server.load("sprites/flag.png"),
+            color: Color::WHITE,
+        },
+        bomb_material: SpriteMaterial {
+            texture: asset_server.load("sprites/bomb.png"),
+            color: Color::WHITE,
+        },
+    });
 }
 
 fn state_handler(
@@ -84,6 +114,6 @@ fn state_handler(
     }
 }
 
-fn sys_camera_setup(mut cmd: Commands) {
+fn camera_setup(mut cmd: Commands) {
     cmd.spawn(Camera2dBundle::default());
 }
