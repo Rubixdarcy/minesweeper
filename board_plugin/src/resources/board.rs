@@ -1,4 +1,4 @@
-use bevy::{window::Window, prelude::{Vec2, Resource, Entity}, utils::HashMap};
+use bevy::{window::Window, prelude::{Vec2, Resource, Entity}, utils::HashMap, log};
 
 use crate::{bounds::Bounds2, components::Coordinates};
 
@@ -12,6 +12,7 @@ pub struct Board {
     pub tile_size: f32,
     pub entity: Entity,
     pub covered_tiles: HashMap<Coordinates, Entity>,
+    pub marked_tiles: Vec<Coordinates>,
 }
 
 impl Board {
@@ -32,15 +33,49 @@ impl Board {
     }
 
     pub fn get_covered_tile(&self, coords: &Coordinates) -> Option<&Entity> {
-        self.covered_tiles.get(coords)
+        if self.marked_tiles.contains(coords) {
+            None
+        } else {
+            self.covered_tiles.get(coords)
+        }
     }
 
     pub fn try_uncover_tile(&mut self, coords: &Coordinates) -> Option<Entity> {
+        if self.marked_tiles.contains(coords) {
+            self.unmark_tile(coords)?;
+        }
         self.covered_tiles.remove(coords)
     }
 
     pub fn adjacent_covered_tiles(&self, coords: &Coordinates) -> impl Iterator<Item = &Entity> {
         coords.neighbors().filter_map(|c| self.get_covered_tile(&c))
+    }
+
+    fn unmark_tile(&mut self, coords: &Coordinates) -> Option<Coordinates> {
+        let pos = match self.marked_tiles.iter().position(|a| a == coords) {
+            Some(p) => p,
+            None => {
+                log::error!("Failed to unmark tile at {}", coords);
+                return None;
+            }
+        };
+        Some(self.marked_tiles.remove(pos))
+    }
+
+    pub fn try_toggle_mark(&mut self, coords: &Coordinates) -> Option<(Entity, bool)> {
+        let entity = *self.covered_tiles.get(coords)?;
+        let mark = if self.marked_tiles.contains(coords) {
+            self.unmark_tile(coords)?;
+            false
+        } else {
+            self.marked_tiles.push(*coords);
+            true
+        };
+        Some((entity, mark))
+    }
+
+    pub fn is_complete(&self) -> bool {
+        self.tile_map.bomb_count() as usize == self.covered_tiles.len()
     }
 
 }

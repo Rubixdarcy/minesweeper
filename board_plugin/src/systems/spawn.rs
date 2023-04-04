@@ -84,6 +84,7 @@ pub fn create_board(
         tile_size,
         entity: board_entity,
         covered_tiles,
+        marked_tiles: Vec::new(),
     });
 }
 

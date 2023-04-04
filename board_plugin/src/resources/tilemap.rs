@@ -102,10 +102,10 @@ impl TileMap {
         self.height
     }
 
-    // // Getter for `bomb_count`
-    // pub fn bomb_count(&self) -> u16 {
-    //     self.bomb_count
-    // }
+    // Getter for `bomb_count`
+    pub fn bomb_count(&self) -> u16 {
+        self.bomb_count
+    }
 }
 
 impl Deref for TileMap {

@@ -5,6 +5,9 @@ use resources::BoardOptions;
 use crate::components::Bomb;
 use crate::components::BombNeighbor;
 use crate::components::Uncover;
+use crate::events::BoardCompletedEvent;
+use crate::events::BombExplosionEvent;
+use crate::events::TileMarkEvent;
 use crate::events::TileTriggerEvent;
 
 mod bounds;
@@ -40,8 +43,12 @@ impl Plugin for BoardPlugin {
         app.add_system(systems::input::input_handling.in_set(active()));
         app.add_system(systems::uncover::trigger_event_handler.in_set(active()));
         app.add_system(systems::uncover::uncover_tiles.in_set(active()));
+        app.add_system(systems::mark::mark_tiles.in_set(active()));
 
         app.add_event::<TileTriggerEvent>();
+        app.add_event::<TileMarkEvent>();
+        app.add_event::<BombExplosionEvent>();
+        app.add_event::<BoardCompletedEvent>();
 
         log::info!("Loaded Board Plugin");
     }
